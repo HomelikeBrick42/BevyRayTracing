@@ -155,4 +155,26 @@ impl Motor {
             e0123: 0.0,
         }
     }
+
+    pub fn magnitude_squared(self) -> f32 {
+        self.s * self.s + self.e12 * self.e12 + self.e13 * self.e13 + self.e23 * self.e23
+    }
+
+    pub fn magnitude(self) -> f32 {
+        self.magnitude_squared().sqrt()
+    }
+
+    pub fn normalized(self) -> Motor {
+        let magnitude = self.magnitude();
+        Self {
+            s: self.s / magnitude,
+            e12: self.e12 / magnitude,
+            e13: self.e13 / magnitude,
+            e23: self.e23 / magnitude,
+            e01: self.e01 / magnitude,
+            e02: self.e02 / magnitude,
+            e03: self.e03 / magnitude,
+            e0123: self.e0123 / magnitude,
+        }
+    }
 }

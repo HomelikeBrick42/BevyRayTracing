@@ -98,7 +98,7 @@ fn update_global_transforms(
                     .as_ref()
                     .map_or(false, |parent| parent.is_changed());
 
-            let mut transform = *current_transform;
+            let Transform { mut motor } = *current_transform;
 
             while let Some(parent) = current_parent {
                 (current_transform, current_parent) = transforms.get(parent.get()).unwrap();
@@ -108,11 +108,13 @@ fn update_global_transforms(
                         .as_ref()
                         .map_or(false, |parent| parent.is_changed());
 
-                transform.motor = transform.motor.pre_apply(current_transform.motor);
+                motor = motor.pre_apply(current_transform.motor);
             }
 
             if transform_changed {
-                *global_transform = GlobalTransform(transform);
+                *global_transform = GlobalTransform(Transform {
+                    motor: motor.normalized(),
+                });
             }
         });
 }
