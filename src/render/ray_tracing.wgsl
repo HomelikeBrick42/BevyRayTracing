@@ -7,7 +7,7 @@ struct Camera {
     v_fov: f32,
     min_distance: f32,
     max_distance: f32,
-    max_bounces: f32,
+    max_bounces: u32,
 }
 
 @group(1)
@@ -82,6 +82,55 @@ fn intersect_sphere(ray: Ray, sphere: Sphere) -> Hit {
     return hit;
 }
 
+fn intersect_ray(ray: Ray) -> Hit {
+    var closest_hit: Hit;
+    closest_hit.hit = false;
+
+    var sphere_index = 0u;
+    while sphere_index < spheres.length {
+        let hit = intersect_sphere(ray, spheres.data[sphere_index]);
+        if hit.hit && (!closest_hit.hit || hit.distance < closest_hit.distance) {
+            closest_hit = hit;
+        }
+        sphere_index += 1u;
+    }
+
+    return closest_hit;
+}
+
+fn skybox(ray: Ray) -> vec3<f32> {
+    let t = ray.direction.y * 0.5 + 0.5;
+    let up = vec3<f32>(0.1, 0.2, 0.8);
+    let down = vec3<f32>(0.7, 0.7, 0.8);
+    return up * t + down * (1.0 - t);
+}
+
+fn trace(ray_: Ray) -> vec3<f32> {
+    var ray = ray_;
+
+    var color = vec3<f32>(1.0, 1.0, 1.0);
+    var incoming_light = vec3<f32>(0.0, 0.0, 0.0);
+
+    var bounce_index = 0u;
+    while bounce_index < camera.max_bounces {
+        let hit = intersect_ray(ray);
+        if hit.hit {
+            ray.origin = hit.position + hit.normal * camera.min_distance;
+            ray.direction = reflect(ray.direction, hit.normal);
+
+            let emitted_light = vec3<f32>(0.0);
+            incoming_light += emitted_light * color;
+            color *= hit.color;
+        } else {
+            incoming_light += skybox(ray) * color;
+            break;
+        }
+        bounce_index += 1u;
+    }
+
+    return incoming_light;
+}
+
 @compute
 @workgroup_size(16, 16)
 fn ray_trace(
@@ -94,8 +143,6 @@ fn ray_trace(
         return;
     }
 
-    var color = vec3<f32>(0.0, 0.0, 0.0);
-
     var ray: Ray;
     ray.origin = point_to_vec3(transform_point(vec3_to_point(vec3<f32>(0.0)), camera.transform));
 
@@ -105,22 +152,7 @@ fn ray_trace(
     ray.direction = vec3<f32>(1.0, normalized_uv.y * theta, normalized_uv.x * aspect * theta);
     ray.direction = normalize(point_to_vec3(transform_point(vec3_to_point(ray.direction), rotation_part_of_motor(camera.transform))));
 
-    var closestHit: Hit;
-    closestHit.hit = false;
-
-    var i = 0u;
-    while i < spheres.length {
-        let hit = intersect_sphere(ray, spheres.data[i]);
-        if hit.hit && (!closestHit.hit || hit.distance < closestHit.distance) {
-            closestHit = hit;
-        }
-        i += 1u;
-    }
-
-    if closestHit.hit {
-        color = closestHit.color;
-    }
-
+    let color = trace(ray);
     textureStore(output_texture, coords.xy, vec4<f32>(clamp(color, vec3<f32>(0.0), vec3<f32>(1.0)), 1.0));
 }
 
