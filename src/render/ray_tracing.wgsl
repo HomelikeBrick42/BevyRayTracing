@@ -7,7 +7,7 @@ struct Camera {
     v_fov: f32,
     min_distance: f32,
     max_distance: f32,
-    max_bounces: u32,
+    sun_direction: vec3<f32>,
 }
 
 @group(1)
@@ -105,30 +105,47 @@ fn skybox(ray: Ray) -> vec3<f32> {
     return up * t + down * (1.0 - t);
 }
 
-fn trace(ray_: Ray) -> vec3<f32> {
-    var ray = ray_;
+fn trace(ray: Ray) -> vec3<f32> {
+    let hit = intersect_ray(ray);
+    if hit.hit {
+        var new_ray: Ray;
+        new_ray.origin = hit.position;
+        new_ray.direction = camera.sun_direction;
 
-    var color = vec3<f32>(1.0, 1.0, 1.0);
-    var incoming_light = vec3<f32>(0.0, 0.0, 0.0);
+        let new_hit = intersect_ray(new_ray);
+        var color = hit.color;
 
-    var bounce_index = 0u;
-    while bounce_index < camera.max_bounces {
-        let hit = intersect_ray(ray);
-        if hit.hit {
-            ray.origin = hit.position + hit.normal * camera.min_distance;
-            ray.direction = reflect(ray.direction, hit.normal);
+        let light = dot(hit.normal, camera.sun_direction) * 0.5 + 0.5;
+        color *= max(f32(!new_hit.hit) * light, 0.5);
 
-            let emitted_light = vec3<f32>(0.0);
-            incoming_light += emitted_light * color;
-            color *= hit.color;
-        } else {
-            incoming_light += skybox(ray) * color;
-            break;
-        }
-        bounce_index += 1u;
+        return color;
+    } else {
+        return skybox(ray);
     }
 
-    return incoming_light;
+    // var ray = ray_;
+
+    // var color = vec3<f32>(1.0, 1.0, 1.0);
+    // var incoming_light = vec3<f32>(0.0, 0.0, 0.0);
+
+    // var bounce_index = 0u;
+    // while bounce_index < camera.max_bounces {
+    //     let hit = intersect_ray(ray);
+    //     if hit.hit {
+    //         ray.origin = hit.position;
+    //         ray.direction = reflect(ray.direction, hit.normal);
+
+    //         let emitted_light = vec3<f32>(0.0);
+    //         incoming_light += emitted_light * color;
+    //         color *= hit.color;
+    //     } else {
+    //         incoming_light += skybox(ray) * color;
+    //         break;
+    //     }
+    //     bounce_index += 1u;
+    // }
+
+    // return incoming_light;
 }
 
 @compute

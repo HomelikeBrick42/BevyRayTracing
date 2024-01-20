@@ -39,7 +39,12 @@ fn startup(mut commands: Commands) {
             v_fov: 90.0,
             min_distance: 0.001,
             max_distance: 100.0,
-            max_bounces: 8,
+            sun_direction: Vector3 {
+                x: 0.4,
+                y: 1.0,
+                z: 0.2,
+            }
+            .normalized(),
         },
         MainCamera,
     ));

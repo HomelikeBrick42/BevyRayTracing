@@ -5,6 +5,28 @@ pub struct Vector2 {
     pub y: f32,
 }
 
+impl Vector2 {
+    pub fn dot(self, other: Self) -> f32 {
+        self.x * other.x + self.y * other.y
+    }
+
+    pub fn sqr_length(self) -> f32 {
+        self.dot(self)
+    }
+
+    pub fn length(self) -> f32 {
+        self.sqr_length().sqrt()
+    }
+
+    pub fn normalized(self) -> Self {
+        let length = self.length();
+        Self {
+            x: self.x / length,
+            y: self.y / length,
+        }
+    }
+}
+
 impl AsRef<[f32; 2]> for Vector2 {
     fn as_ref(&self) -> &[f32; 2] {
         unsafe { std::mem::transmute(self) }

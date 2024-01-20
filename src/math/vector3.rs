@@ -6,6 +6,29 @@ pub struct Vector3 {
     pub z: f32,
 }
 
+impl Vector3 {
+    pub fn dot(self, other: Self) -> f32 {
+        self.x * other.x + self.y * other.y + self.z * other.z
+    }
+
+    pub fn sqr_length(self) -> f32 {
+        self.dot(self)
+    }
+
+    pub fn length(self) -> f32 {
+        self.sqr_length().sqrt()
+    }
+
+    pub fn normalized(self) -> Self {
+        let length = self.length();
+        Self {
+            x: self.x / length,
+            y: self.y / length,
+            z: self.z / length,
+        }
+    }
+}
+
 impl AsRef<[f32; 3]> for Vector3 {
     fn as_ref(&self) -> &[f32; 3] {
         unsafe { std::mem::transmute(self) }

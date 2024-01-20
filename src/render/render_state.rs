@@ -19,7 +19,7 @@ struct GpuCamera {
     v_fov: f32,
     min_distance: f32,
     max_distance: f32,
-    max_bounces: u32,
+    sun_direction: Vector3,
 }
 
 #[derive(ShaderType)]
@@ -400,7 +400,7 @@ pub(super) fn update_camera(
             v_fov,
             min_distance,
             max_distance,
-            max_bounces,
+            sun_direction,
         } = *camera;
         buffer
             .write(&GpuCamera {
@@ -408,7 +408,7 @@ pub(super) fn update_camera(
                 v_fov,
                 min_distance,
                 max_distance,
-                max_bounces,
+                sun_direction,
             })
             .unwrap();
         render_state.queue.write_buffer(

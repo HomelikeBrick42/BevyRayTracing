@@ -42,7 +42,7 @@ pub struct Camera {
     pub v_fov: f32,
     pub min_distance: f32,
     pub max_distance: f32,
-    pub max_bounces: u32,
+    pub sun_direction: Vector3,
 }
 
 #[derive(Component)]
